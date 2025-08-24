@@ -1,0 +1,278 @@
+type: "transformation"
+version: "1.0"
+pipeline:
+  components:
+    STG_Retail_Customers:
+      type: "table-input"
+      parameters:
+        componentName: "STG_Retail_Customers"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "STG_Retail_Customers"
+        columnNames:
+        - "CustomerID"
+        - "CustomerName"
+        - "Email"
+        - "Phone"
+        - "City"
+        - "Join_Date"
+        timeOffset:
+    STG_Retail_Products:
+      type: "table-input"
+      parameters:
+        componentName: "STG_Retail_Products"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "STG_Retail_Products"
+        columnNames:
+        - "ProductId"
+        - "ProductName"
+        - "Category"
+        - "Price"
+        - "Stock"
+        timeOffset:
+    STG_Retail_Stores:
+      type: "table-input"
+      parameters:
+        componentName: "STG_Retail_Stores"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "STG_Retail_Stores"
+        columnNames:
+        - "StoreId"
+        - "StoreName"
+        - "City"
+        - "Manager"
+        timeOffset:
+    STG_Retail_Orders:
+      type: "table-input"
+      parameters:
+        componentName: "STG_Retail_Orders"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "STG_Retail_Orders"
+        columnNames:
+        - "OrderId"
+        - "CustomerId"
+        - "ProductId"
+        - "StoreId"
+        - "Quantity"
+        - "UnitPrice"
+        - "TotalAmount"
+        - "OrderDate"
+        timeOffset:
+    Join_ALL_TABLES:
+      type: "join"
+      sources:
+      - "STG_Retail_Customers"
+      - "STG_Retail_Products"
+      - "STG_Retail_Stores"
+      - "STG_Retail_Orders"
+      parameters:
+        componentName: "Join_ALL_TABLES"
+        mainTable: "STG_Retail_Orders"
+        mainTableAlias: "ALL_DATA"
+        joins:
+        - - "STG_Retail_Customers"
+          - "C"
+          - "Inner"
+        - - "STG_Retail_Products"
+          - "P"
+          - "Inner"
+        - - "STG_Retail_Stores"
+          - "S"
+          - "Inner"
+        joinExpressions:
+        - - "\"ALL_DATA\".\"CustomerId\"=\"C\".\"CustomerID\" "
+          - "ALL_DATA_Inner_C"
+        - - "\"ALL_DATA\".\"ProductId\"=\"P\".\"ProductId\""
+          - "ALL_DATA_Inner_P"
+        - - "\"ALL_DATA\".\"StoreId\"=\"S\".\"StoreId\""
+          - "ALL_DATA_Inner_S"
+        columnMappings:
+        - - "ALL_DATA.OrderId"
+          - "OrderId"
+        - - "ALL_DATA.OrderDate"
+          - "OrderDate"
+        - - "ALL_DATA.CustomerId"
+          - "CusID"
+        - - "ALL_DATA.StoreId"
+          - "StoreId"
+        - - "ALL_DATA.ProductId"
+          - "ProductId"
+        - - "S.City"
+          - "Store_City"
+        - - "ALL_DATA.TotalAmount"
+          - "TotalAmount"
+    'Year And Month From Orderdate ':
+      type: "calculator"
+      sources:
+      - "Join_ALL_TABLES"
+      parameters:
+        componentName: "Year And Month From Orderdate "
+        includeInputColumns: "Yes"
+        calculations:
+        - - "YEAR(\"OrderDate\")"
+          - "Year_Order"
+        - - "TO_CHAR(\"OrderDate\",'MMMM')"
+          - "Month_Order"
+    Aggregate:
+      type: "aggregate"
+      sources:
+      - "Year And Month From Orderdate "
+      parameters:
+        componentName: "Aggregate"
+        groupings:
+        - "CusID"
+        - "Year_Order"
+        - "Month_Order"
+        aggregations:
+        - - "TotalAmount"
+          - "Sum"
+        - - "TotalAmount"
+          - "Average"
+        groupingType: "Group By"
+    Rank:
+      type: "rank"
+      sources:
+      - "Year And Month From Orderdate "
+      parameters:
+        componentName: "Rank"
+        includeInputColumns: "Yes"
+        partitionData:
+        - "Store_City"
+        - "StoreId"
+        orderingWithinPartitions:
+        - - "TotalAmount"
+          - "Descending"
+        functions:
+        - - "Dense Rank"
+          - "Rank_customer"
+    Rewrite Table:
+      type: "rewrite-table"
+      sources:
+      - "Rank"
+      parameters:
+        componentName: "Rewrite Table"
+        warehouse: "[Environment Default]"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "Rank_cus"
+        orderBy:
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+    CustomersWith order:
+      type: "join"
+      sources:
+      - "STG_Retail_Customers"
+      - "STG_Retail_Orders"
+      parameters:
+        componentName: "CustomersWith order"
+        mainTable: "STG_Retail_Customers"
+        mainTableAlias: "C"
+        joins:
+        - - "STG_Retail_Orders"
+          - "O"
+          - "Left"
+        joinExpressions:
+        - - "\"C\".\"CustomerID\"=\"O\".\"CustomerId\""
+          - "C_Left_O"
+        columnMappings:
+        - - "C.CustomerID"
+          - "CustomerID"
+        - - "C.CustomerName"
+          - "CustomerName"
+        - - "C.Email"
+          - "Email"
+        - - "C.Phone"
+          - "Phone"
+        - - "C.City"
+          - "City"
+        - - "C.Join_Date"
+          - "Join_Date"
+        - - "O.OrderId"
+          - "OrderId"
+        - - "O.CustomerId"
+          - "CustomerId"
+        - - "O.ProductId"
+          - "ProductId"
+        - - "O.StoreId"
+          - "StoreId"
+        - - "O.Quantity"
+          - "Quantity"
+        - - "O.UnitPrice"
+          - "UnitPrice"
+        - - "O.TotalAmount"
+          - "TotalAmount"
+        - - "O.OrderDate"
+          - "OrderDate"
+    CustomerNot placed Any Order:
+      type: "filter"
+      sources:
+      - "CustomersWith order"
+      parameters:
+        componentName: "CustomerNot placed Any Order"
+        filterConditions:
+        - - "OrderId"
+          - "Is"
+          - "Null or blank"
+          - ""
+        combineCondition: "And"
+design:
+  components:
+    STG_Retail_Customers:
+      position:
+        x: -530
+        "y": -140
+      tempMetlId: 1
+    STG_Retail_Products:
+      position:
+        x: -530
+        "y": -50
+      tempMetlId: 2
+    STG_Retail_Stores:
+      position:
+        x: -530
+        "y": 40
+      tempMetlId: 3
+    STG_Retail_Orders:
+      position:
+        x: -530
+        "y": 130
+      tempMetlId: 4
+    Join_ALL_TABLES:
+      position:
+        x: -300
+        "y": 10
+      tempMetlId: 5
+    'Year And Month From Orderdate ':
+      position:
+        x: -140
+        "y": 10
+      tempMetlId: 6
+    Aggregate:
+      position:
+        x: 20
+        "y": 10
+      tempMetlId: 7
+    Rank:
+      position:
+        x: 20
+        "y": -110
+      tempMetlId: 8
+    Rewrite Table:
+      position:
+        x: 180
+        "y": -110
+      tempMetlId: 9
+    CustomersWith order:
+      position:
+        x: -370
+        "y": -140
+      tempMetlId: 10
+    CustomerNot placed Any Order:
+      position:
+        x: -210
+        "y": -140
+      tempMetlId: 11

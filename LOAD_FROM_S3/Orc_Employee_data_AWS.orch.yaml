@@ -7,6 +7,7 @@ pipeline:
       transitions:
         unconditional:
         - "Create Table"
+        - "SQL Script"
       parameters:
         componentName: "Start"
     Create Table:
@@ -212,6 +213,17 @@ pipeline:
       postProcessing:
         updateOutputMessage:
         updateScalarVariables:
+    SQL Script:
+      type: "sql-executor"
+      parameters:
+        componentName: "SQL Script"
+        scriptLocation: "Component"
+        declareSqlVariables: "Include selected"
+        variablesToInclude:
+        sqlScript:
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
 design:
   components:
     Start:
@@ -229,3 +241,8 @@ design:
         x: -210
         "y": -110
       tempMetlId: 3
+    SQL Script:
+      position:
+        x: -370
+        "y": -230
+      tempMetlId: 4

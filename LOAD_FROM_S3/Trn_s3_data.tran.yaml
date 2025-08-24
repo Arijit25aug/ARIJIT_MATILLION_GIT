@@ -1,0 +1,110 @@
+type: "transformation"
+version: "1.0"
+pipeline:
+  components:
+    Employee:
+      type: "table-input"
+      parameters:
+        componentName: "Employee"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "Employee"
+        columnNames:
+        - "Employee_ID"
+        - "Full_Name"
+        - "Job_Title"
+        - "Department"
+        - "Business_Unit"
+        - "Gender"
+        - "Ethnicity"
+        - "Age"
+        - "Hire Date"
+        - "Annual_Salary"
+        - "Bonus%"
+        - "Country"
+        - "City"
+        - "Exit_Date"
+        timeOffset:
+    Calculator:
+      type: "calculator"
+      sources:
+      - "Employee"
+      parameters:
+        componentName: "Calculator"
+        includeInputColumns: "No"
+        calculations:
+        - - "CONCAT(\"Job_Title\", \"Department\")"
+          - "Tilte_Dept"
+        - - "\"Job_Title\""
+          - "Job_Title"
+        - - "\"Department\""
+          - "Department"
+        - - "YEAR(\"Hire Date\")"
+          - "Year_joined_date"
+        - - "MONTH(\"Hire Date\")"
+          - "Month_Joined_Date"
+    Aggregate:
+      type: "aggregate"
+      sources:
+      - "Calculator"
+      parameters:
+        componentName: "Aggregate"
+        groupings:
+        - "Year_joined_date"
+        - "Month_Joined_Date"
+        aggregations:
+        - - "Tilte_Dept"
+          - "Count Distinct"
+        groupingType: "Group By"
+    Rename:
+      type: "rename"
+      sources:
+      - "Aggregate"
+      parameters:
+        componentName: "Rename"
+        columnMapping:
+        - - "count_distinct_Tilte_Dept"
+          - "Total_Customer"
+        - - "Year_joined_date"
+          - "Joining Year"
+        - - "Month_Joined_Date"
+          - "Joining Month"
+        includeInputColumns: "Yes"
+    Lead/Lag:
+      type: "lead-lag"
+      sources:
+      - "Rename"
+      parameters:
+        componentName: "Lead/Lag"
+        includeInputColumns: "Yes"
+        partitionData:
+        orderingsWithinPartitions:
+        functions:
+        ignoreNulls: "No"
+design:
+  components:
+    Employee:
+      position:
+        x: -540
+        "y": -140
+      tempMetlId: 1
+    Calculator:
+      position:
+        x: -380
+        "y": -140
+      tempMetlId: 2
+    Aggregate:
+      position:
+        x: -220
+        "y": -140
+      tempMetlId: 3
+    Rename:
+      position:
+        x: -60
+        "y": -140
+      tempMetlId: 4
+    Lead/Lag:
+      position:
+        x: 100
+        "y": -140
+      tempMetlId: 5

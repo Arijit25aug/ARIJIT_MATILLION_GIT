@@ -1,0 +1,543 @@
+type: "orchestration"
+version: "1.0"
+pipeline:
+  components:
+    Start:
+      type: "start"
+      transitions:
+        unconditional:
+        - "Create_Customer_Table"
+        - "Create_Product_Table"
+        - "Create_Store_Table"
+        - "Create_Order_Table"
+      parameters:
+        componentName: "Start"
+    Create_Customer_Table:
+      type: "create-table-v2"
+      transitions:
+        success:
+        - "S3_Load_Customers"
+      parameters:
+        componentName: "Create_Customer_Table"
+        createMethod: "Replace"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        table: "STG_Retail_Customers"
+        snowflakeTableType: "Permanent"
+        columns:
+        - - "CustomerID"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "Yes"
+          - "Yes"
+          - ""
+          - ""
+        - - "CustomerName"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "Email"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "Phone"
+          - "VARCHAR"
+          - "20"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "City"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "Join_Date"
+          - "DATE"
+          - ""
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        defaultDdlCollation:
+        primaryKeys:
+        - "CustomerID"
+        clusteringKeys:
+        dataRetentionTimeInDays:
+        comment:
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+    Create_Product_Table:
+      type: "create-table-v2"
+      transitions:
+        success:
+        - "S3_Load_Products"
+      parameters:
+        componentName: "Create_Product_Table"
+        createMethod: "Replace"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        table: "STG_Retail_Products"
+        snowflakeTableType: "Permanent"
+        columns:
+        - - "ProductId"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "ProductName"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "Category"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "Price"
+          - "NUMBER"
+          - "10"
+          - "2"
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "Stock"
+          - "NUMBER"
+          - ""
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        defaultDdlCollation:
+        primaryKeys:
+        - "ProductId"
+        clusteringKeys:
+        dataRetentionTimeInDays:
+        comment:
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+    Create_Store_Table:
+      type: "create-table-v2"
+      transitions:
+        success:
+        - "S3_Load_Stores"
+      parameters:
+        componentName: "Create_Store_Table"
+        createMethod: "Create If Not Exists"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        table: "STG_Retail_Stores"
+        snowflakeTableType: "Permanent"
+        columns:
+        - - "StoreId"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "Yes"
+          - "Yes"
+          - ""
+          - ""
+        - - "StoreName"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "City"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "Manager"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        defaultDdlCollation:
+        primaryKeys:
+        - "StoreId"
+        clusteringKeys:
+        dataRetentionTimeInDays:
+        comment:
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+    Create_Order_Table:
+      type: "create-table-v2"
+      transitions:
+        success:
+        - "S3_Load_Orders"
+      parameters:
+        componentName: "Create_Order_Table"
+        createMethod: "Replace"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        table: "STG_Retail_Orders"
+        snowflakeTableType: "Permanent"
+        columns:
+        - - "OrderId"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "CustomerId"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "ProductId"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "StoreId"
+          - "VARCHAR"
+          - "50"
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "Quantity"
+          - "NUMBER"
+          - ""
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "UnitPrice"
+          - "NUMBER"
+          - "10"
+          - "2"
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "TotalAmount"
+          - "NUMBER"
+          - "10"
+          - "2"
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        - - "OrderDate"
+          - "DATE"
+          - ""
+          - ""
+          - ""
+          - "No"
+          - "No"
+          - ""
+          - ""
+        defaultDdlCollation:
+        primaryKeys:
+        - "OrderId"
+        clusteringKeys:
+        dataRetentionTimeInDays:
+        comment:
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+    S3_Load_Customers:
+      type: "s3-load"
+      parameters:
+        componentName: "S3_Load_Customers"
+        stage: "[Custom]"
+        authentication: "Credentials"
+        s3ObjectPrefix: "s3://analyticsmatillion/Retail_store/customers.csv"
+        pattern: ".*"
+        encryption: "None"
+        warehouse: "[Environment Default]"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "STG_Retail_Customers"
+        loadColumns:
+        - "CustomerID"
+        - "CustomerName"
+        - "Email"
+        - "Phone"
+        - "City"
+        - "Join_Date"
+        format: "[Custom]"
+        fileType: "CSV"
+        compression: "AUTO"
+        recordDelimiter:
+        fieldDelimiter: ","
+        skipHeader: "1"
+        skipBlankLines: "True"
+        dateFormat: ""
+        timeFormat:
+        timestampFormat:
+        escape:
+        escapeUnenclosedField:
+        trimSpace: "False"
+        fieldOptionallyEnclosed:
+        nullIf:
+        errorOnColumnCountMismatch: "True"
+        emptyFieldAsNull: "True"
+        replaceInvalidCharacters: "True"
+        encodingType:
+        onError: "Abort Statement"
+        sizeLimitB:
+        purgeFiles: "False"
+        truncateColumns: "False"
+        forceLoad: "False"
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+    S3_Load_Products:
+      type: "s3-load"
+      parameters:
+        componentName: "S3_Load_Products"
+        stage: "[Custom]"
+        authentication: "Credentials"
+        s3ObjectPrefix: "s3://analyticsmatillion/Retail_store/products.csv"
+        pattern: ".*"
+        encryption: "None"
+        warehouse: "[Environment Default]"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "STG_Retail_Products"
+        loadColumns:
+        - "ProductId"
+        - "ProductName"
+        - "Category"
+        - "Price"
+        - "Stock"
+        format: "[Custom]"
+        fileType: "CSV"
+        compression: "AUTO"
+        recordDelimiter:
+        fieldDelimiter: ","
+        skipHeader: "1"
+        skipBlankLines: "True"
+        dateFormat:
+        timeFormat:
+        timestampFormat:
+        escape:
+        escapeUnenclosedField:
+        trimSpace: "False"
+        fieldOptionallyEnclosed:
+        nullIf:
+        errorOnColumnCountMismatch: "False"
+        emptyFieldAsNull: "True"
+        replaceInvalidCharacters: "False"
+        encodingType:
+        onError: "Abort Statement"
+        sizeLimitB:
+        purgeFiles: "False"
+        truncateColumns: "False"
+        forceLoad: "False"
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+    S3_Load_Stores:
+      type: "s3-load"
+      parameters:
+        componentName: "S3_Load_Stores"
+        stage: "[Custom]"
+        authentication: "Credentials"
+        s3ObjectPrefix: "s3://analyticsmatillion/Retail_store/stores.csv"
+        pattern: ".*"
+        encryption: "None"
+        warehouse: "[Environment Default]"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "STG_Retail_Stores"
+        loadColumns:
+        - "StoreId"
+        - "StoreName"
+        - "City"
+        - "Manager"
+        format: "[Custom]"
+        fileType: "CSV"
+        compression: "AUTO"
+        recordDelimiter:
+        fieldDelimiter: ","
+        skipHeader: "1"
+        skipBlankLines: "True"
+        dateFormat:
+        timeFormat:
+        timestampFormat:
+        escape:
+        escapeUnenclosedField:
+        trimSpace: "False"
+        fieldOptionallyEnclosed:
+        nullIf:
+        errorOnColumnCountMismatch: "False"
+        emptyFieldAsNull: "True"
+        replaceInvalidCharacters: "False"
+        encodingType:
+        onError: "Abort Statement"
+        sizeLimitB:
+        purgeFiles: "False"
+        truncateColumns: "False"
+        forceLoad: "False"
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+    S3_Load_Orders:
+      type: "s3-load"
+      parameters:
+        componentName: "S3_Load_Orders"
+        stage: "[Custom]"
+        authentication: "Credentials"
+        s3ObjectPrefix: "s3://analyticsmatillion/Retail_store/orders.csv"
+        pattern: ".*"
+        encryption: "None"
+        warehouse: "[Environment Default]"
+        database: "[Environment Default]"
+        schema: "[Environment Default]"
+        targetTable: "STG_Retail_Orders"
+        loadColumns:
+        - "OrderId"
+        - "CustomerId"
+        - "ProductId"
+        - "StoreId"
+        - "Quantity"
+        - "UnitPrice"
+        - "TotalAmount"
+        - "OrderDate"
+        format: "[Custom]"
+        fileType: "CSV"
+        compression: "AUTO"
+        recordDelimiter:
+        fieldDelimiter: ","
+        skipHeader: "1"
+        skipBlankLines: "False"
+        dateFormat:
+        timeFormat:
+        timestampFormat:
+        escape:
+        escapeUnenclosedField:
+        trimSpace: "False"
+        fieldOptionallyEnclosed:
+        nullIf:
+        errorOnColumnCountMismatch: "False"
+        emptyFieldAsNull: "True"
+        replaceInvalidCharacters: "False"
+        encodingType:
+        onError: "Abort Statement"
+        sizeLimitB:
+        purgeFiles: "False"
+        truncateColumns: "True"
+        forceLoad: "False"
+      postProcessing:
+        updateOutputMessage:
+        updateScalarVariables:
+design:
+  components:
+    Start:
+      position:
+        x: -220
+        "y": 0
+      tempMetlId: 1
+    Create_Customer_Table:
+      position:
+        x: -120
+        "y": -180
+      tempMetlId: 2
+    Create_Product_Table:
+      position:
+        x: -120
+        "y": -60
+      tempMetlId: 3
+    Create_Store_Table:
+      position:
+        x: -120
+        "y": 60
+      tempMetlId: 4
+    Create_Order_Table:
+      position:
+        x: -120
+        "y": 190
+      tempMetlId: 5
+    S3_Load_Customers:
+      position:
+        x: 50
+        "y": -180
+      tempMetlId: 6
+    S3_Load_Products:
+      position:
+        x: 50
+        "y": -60
+      tempMetlId: 7
+    S3_Load_Stores:
+      position:
+        x: 50
+        "y": 60
+      tempMetlId: 8
+    S3_Load_Orders:
+      position:
+        x: 50
+        "y": 190
+      tempMetlId: 9
